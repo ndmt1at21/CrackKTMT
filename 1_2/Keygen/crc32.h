@@ -49,12 +49,12 @@ static uint32_t crc32Table[256] =
 	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-uint32_t getStrCrc(const std::string data)
+uint32_t getStrCrc(const unsigned char data[], int size)
 {
 	uint32_t result = 0xFFFFFFFF;
 	int index = 0;
 
-	for (int i = 0; i < data.length(); i++)
+	for (int i = 0; i < size; i++)
 	{
 		index = (int(data[i]) ^ result) & 0x000000FF;
 		result = (result >> 8) ^ crc32Table[index];

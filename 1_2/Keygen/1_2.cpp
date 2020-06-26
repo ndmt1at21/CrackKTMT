@@ -30,33 +30,27 @@ std::string randomInputKey()
 {
 	std::string srcStr = "BDRQKPTVJI";
 	std::string srcNum = "0123456789";
-	std::string inputStr;
+	std::string inputStr(5, '\0');
 
 	int countChar = 0;
-	int countNum = 0;
-	for (int i = 0; i < 5; i++)
+	while (countChar < 3)
 	{
-		int type = rand() % 2;
+		int idx = rand() % 5;
+		if (inputStr[idx] == '\0')
+		{
+			inputStr[idx] = srcStr[rand() % srcStr.length()];
+			countChar++;
+		}
+	}
 
-		if (type == 0 && countChar < 3)
+	int countNum = 0;
+	while (countNum < 2)
+	{
+		int idx = rand() % 5;
+		if (inputStr[idx] == '\0')
 		{
-			inputStr += srcStr[rand() % srcStr.length()];
-			countChar++;
-		}
-		else if (type == 0 && countChar >= 3)
-		{
-			inputStr += srcNum[rand() % srcStr.length()];
+			inputStr[idx] = srcNum[rand() % srcNum.length()];
 			countNum++;
-		}
-		else if (type == 1 && countNum < 2)
-		{
-			inputStr += srcNum[rand() % srcNum.length() + 1];
-			countNum++;
-		}
-		else if (type == 1 && countNum >= 2)
-		{
-			inputStr += srcStr[rand() % srcStr.length()];
-			countChar++;
 		}
 	}
 
@@ -89,22 +83,32 @@ int main()
 		}
 
 		// Chuyển A sang định dạng hex string
-		char hex[9];
-		sprintf_s(hex, 9, "%08X", A);
+		std::string hexTmp;
+		std::stringstream ss;
+		ss << std::hex << A;
+		ss >> hexTmp;
 
-		for (int i = 0; i < 8; i++)
-			hex[i] = (int(hex[i]) ^ BoxValue[i]);
+		unsigned char hex[9] = { 0 };
+		memcpy((void*)hex, hexTmp.c_str(), hexTmp.length());
+		hex[hexTmp.length()] = '\0';
 
-		for (int i = 0; i < 8; i++)
-			hex[i] = (int(hex[i] << i) | int(hex[i]));
+		for (int i = 0; i < hexTmp.length(); i++)
+			hex[i] = (int(toupper(hex[i])) ^ BoxValue[i]);
+
+		for (int i = 0; i < hexTmp.length(); i++)
+			hex[i] = (int(toupper(hex[i] << i)) | int(hex[i]));
 
 		// hash CRC32
-		uint32_t crc = getStrCrc(hex);
+		uint32_t crc = getStrCrc(hex, hexTmp.length());
 
 		// Chuyển về dạng hex string
-		sprintf_s((char*)hex, 9, "%08X", crc);
+		ss.clear();
+		ss << std::hex << crc;
+		ss >> hex;
 		
 		// Print key 2
+		for (int i = 0; i < 8; i++)
+			hex[i] = toupper(hex[i]);
 		std::cout << hex << std::endl;
 
 		// Tiếp tục chương trình?
@@ -112,13 +116,7 @@ int main()
 		std::cout << "Press any key to exit\n";
 
 		int nContinue = _getch();
-		if (nContinue == ' ')
-		{
-			continue;
-			system("cls");
-		}
-		else
-			break;
+		
 
 		
 	}
